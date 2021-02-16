@@ -1,3 +1,15 @@
+"""
+python main.py --env-name "dm.walker.walk" --algo ppo --use-gae --log-interval 1 \
+    --num-steps 2048 --num-processes 1 --lr 3e-4 --entropy-coef 0 --value-loss-coef 0.5 \
+    --ppo-epoch 10 --num-mini-batch 32 --gamma 0.99 --gae-lambda 0.95 \
+        --num-env-steps 1000000 --use-linear-lr-decay --use-proper-time-limits
+
+python main.py --env-name "dm.humanoid.stand" --algo ppo --use-gae --log-interval 10 \
+    --num-steps 4096 --num-processes 1 --lr 3e-4 --entropy-coef 0 --value-loss-coef 0.5 \
+    --ppo-epoch 1 --num-mini-batch 256 --gamma 0.99 --gae-lambda 0.95 \
+        --num-env-steps 1000000 --use-proper-time-limits
+
+"""
 import copy
 import glob
 import os
@@ -19,9 +31,13 @@ from a2c_ppo_acktr.model import Policy
 from a2c_ppo_acktr.storage import RolloutStorage
 from evaluation import evaluate
 
+import wandb 
+wandb.init(project="max_ent")
 
 def main():
     args = get_args()
+    if args.seed == 1:
+        args.seed = np.random.randint(999)
 
     torch.manual_seed(args.seed)
     torch.cuda.manual_seed_all(args.seed)
@@ -37,6 +53,11 @@ def main():
 
     torch.set_num_threads(1)
     device = torch.device("cuda:0" if args.cuda else "cpu")
+    wandb.config.update(args)
+    wandb.run.name = str(args.env_name)+'-seed'+str(args.seed)+ \
+        '-proc'+str(args.num_processes)+'-nsteps'+str(args.num_steps)+'-mbatch'+str(args.num_mini_batch)
+    print("log dir:", log_dir)
+    wandb.run.save()
 
     envs = make_vec_envs(args.env_name, args.seed, args.num_processes,
                          args.gamma, args.log_dir, device, False)
@@ -46,7 +67,7 @@ def main():
         envs.action_space,
         base_kwargs={'recurrent': args.recurrent_policy})
     actor_critic.to(device)
-
+   
     if args.algo == 'a2c':
         agent = algo.A2C_ACKTR(
             actor_critic,
@@ -109,7 +130,8 @@ def main():
             utils.update_linear_schedule(
                 agent.optimizer, j, num_updates,
                 agent.optimizer.lr if args.algo == "acktr" else args.lr)
-
+        
+        # number of forward steps between each update
         for step in range(args.num_steps):
             # Sample actions
             with torch.no_grad():
@@ -186,6 +208,15 @@ def main():
                         np.median(episode_rewards), np.min(episode_rewards),
                         np.max(episode_rewards), dist_entropy, value_loss,
                         action_loss))
+            to_log = {
+                "env-steps": total_num_steps,
+                "mean-eps-rew": np.mean(episode_rewards),
+                "min-eps-rew": np.min(episode_rewards),
+                "max-eps-rew": np.max(episode_rewards),
+                "dist-entropy": dist_entropy,
+                "value_loss": value_loss,
+                "action_loss": action_loss}
+            wandb.log(to_log)
 
         if (args.eval_interval is not None and len(episode_rewards) > 1
                 and j % args.eval_interval == 0):

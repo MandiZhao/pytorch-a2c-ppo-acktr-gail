@@ -11,11 +11,12 @@ from stable_baselines3.common.atari_wrappers import (
 from stable_baselines3.common.vec_env import VecEnvWrapper, DummyVecEnv, SubprocVecEnv
 from stable_baselines3.common.vec_env.vec_normalize import \
     VecNormalize as VecNormalize_
-
-try:
-    import dm_control2gym
-except ImportError:
-    pass
+# import dm_control2gym
+import dmc2gym as dm_control2gym
+# try:
+#     import dm_control2gym
+# except ImportError:
+#     pass
 
 try:
     import roboschool

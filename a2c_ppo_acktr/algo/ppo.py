@@ -12,8 +12,8 @@ class PPO():
                  num_mini_batch,
                  value_loss_coef,
                  entropy_coef,
-                 lr=None,
-                 eps=None,
+                 lr=1e-4,
+                 eps=1e-5,
                  max_grad_norm=None,
                  use_clipped_value_loss=True):
 
@@ -58,8 +58,9 @@ class PPO():
                     obs_batch, recurrent_hidden_states_batch, masks_batch,
                     actions_batch)
 
-                ratio = torch.exp(action_log_probs -
-                                  old_action_log_probs_batch)
+                # ratio = torch.exp(action_log_probs -
+                #                   old_action_log_probs_batch) # heard this sometimes gives nan:)
+                ratio = torch.exp(action_log_probs) / torch.exp(old_action_log_probs_batch)
                 surr1 = ratio * adv_targ
                 surr2 = torch.clamp(ratio, 1.0 - self.clip_param,
                                     1.0 + self.clip_param) * adv_targ

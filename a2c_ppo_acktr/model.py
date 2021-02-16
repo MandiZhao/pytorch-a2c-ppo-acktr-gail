@@ -52,14 +52,26 @@ class Policy(nn.Module):
         raise NotImplementedError
 
     def act(self, inputs, rnn_hxs, masks, deterministic=False):
+        catch = torch.isnan(inputs)
+        if catch.any():
+            print("inputs: ", inputs)
+            raise ValueError("Got bad inputs")
         value, actor_features, rnn_hxs = self.base(inputs, rnn_hxs, masks)
         dist = self.dist(actor_features)
+        catch = torch.isnan(actor_features)
+        if catch.any():
+            print(actor_features)
+            print("distribution: ", dist)
+            raise ValueError("Got bad actor features")
 
         if deterministic:
             action = dist.mode()
         else:
             action = dist.sample()
 
+        # debug purpose
+        action_range = [-1.0, 1.0]
+        action = action.clamp(*action_range) 
         action_log_probs = dist.log_probs(action)
         dist_entropy = dist.entropy().mean()
 

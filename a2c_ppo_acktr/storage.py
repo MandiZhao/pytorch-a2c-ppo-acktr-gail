@@ -1,12 +1,16 @@
 import torch
 from torch.utils.data.sampler import BatchSampler, SubsetRandomSampler
 
-
 def _flatten_helper(T, N, _tensor):
     return _tensor.view(T * N, *_tensor.size()[2:])
 
 
 class RolloutStorage(object):
+    """
+    For on-policy algorithms, "buffer" is significantly smaller since it
+    gets flushed out befor the next round of policy update. 
+    Shape of data here is (num_steps, num_processes, ..)
+    """
     def __init__(self, num_steps, num_processes, obs_shape, action_space,
                  recurrent_hidden_state_size):
         self.obs = torch.zeros(num_steps + 1, num_processes, *obs_shape)
@@ -119,6 +123,8 @@ class RolloutStorage(object):
                 "".format(num_processes, num_steps, num_processes * num_steps,
                           num_mini_batch))
             mini_batch_size = batch_size // num_mini_batch
+        # NOTE: this split of entire rollout into mini-batch is different than
+        # the spinning up implementation: https://github.com/CannyLab/spinningup/blob/6d1a101712e2c920dc95cd243103e9226d618a4d/spinup/algos/pytorch/ppo/ppo.py#L71
         sampler = BatchSampler(
             SubsetRandomSampler(range(batch_size)),
             mini_batch_size,

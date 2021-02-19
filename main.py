@@ -17,6 +17,7 @@ import time
 from collections import deque
 
 import gym
+gym.logger.set_level(40)
 import numpy as np
 import torch
 import torch.nn as nn
@@ -32,7 +33,6 @@ from a2c_ppo_acktr.storage import RolloutStorage
 from evaluation import evaluate
 
 import wandb 
-wandb.init(project="max_ent")
 
 def main():
     args = get_args()
@@ -53,15 +53,18 @@ def main():
 
     torch.set_num_threads(1)
     device = torch.device("cuda:0" if args.cuda else "cpu")
+    
+
+    envs = make_vec_envs(args.env_name, args.seed, args.num_processes,
+                         args.gamma, args.log_dir, device, False)
+
+    wandb.init(project="max_ent")
     wandb.config.update(args)
     wandb.run.name = str(args.env_name)+'-seed'+str(args.seed)+ \
         '-proc'+str(args.num_processes)+'-nsteps'+str(args.num_steps)+'-mbatch'+str(args.num_mini_batch)
     print("log dir:", log_dir)
     wandb.run.save()
-
-    envs = make_vec_envs(args.env_name, args.seed, args.num_processes,
-                         args.gamma, args.log_dir, device, False)
-
+    
     actor_critic = Policy(
         envs.observation_space.shape,
         envs.action_space,

@@ -1,0 +1,27 @@
+windows:
+  - name: search
+    layout: even-horizontal
+    panes:
+        - conda activate drq; CPUS=20-30; NAME="dm.humanoid.stand"; export CUDA_VISIBLE_DEVICES=1;
+          taskset -c ${CPUS} python main.py --use-gae --use-proper-time-limits 
+          --gae-lambda 0.95 --lr 3e-4 --entropy-coef 0.1 
+          --num-steps 4096 --num-processes 2 --value-loss-coef 0.5 
+          --ppo-epoch 10 --num-mini-batch 16 --gamma 0.99 
+          
+        - conda activate drq; CPUS=20-30; NAME="dm.humanoid.stand"; export CUDA_VISIBLE_DEVICES=1;
+          taskset -c ${CPUS} python main.py --use-gae --use-proper-time-limits 
+          --gae-lambda 0.95 --lr 3e-4 --entropy-coef 0.05
+          --num-steps 4096 --num-processes 2 --value-loss-coef 0.5 
+          --ppo-epoch 10 --num-mini-batch 16 --gamma 0.99
+        
+        - conda activate drq; CPUS=20-30; NAME="dm.humanoid.stand"; export CUDA_VISIBLE_DEVICES=1;
+          taskset -c ${CPUS} python main.py --use-gae --use-proper-time-limits 
+          --gae-lambda 0.95 --lr 3e-4 --entropy-coef 0.2
+          --num-steps 4096 --num-processes 2 --value-loss-coef 0.5 
+          --ppo-epoch 10 --num-mini-batch 16 --gamma 0.99
+        
+        - conda activate drq; CPUS=20-30; NAME="dm.humanoid.stand"; export CUDA_VISIBLE_DEVICES=1;
+          taskset -c ${CPUS} python main.py --use-gae --use-proper-time-limits 
+          --gae-lambda 0.95 --lr 3e-4 --entropy-coef 0.5
+          --num-steps 4096 --num-processes 2 --value-loss-coef 0.5 
+          --ppo-epoch 10 --num-mini-batch 16 --gamma 0.99

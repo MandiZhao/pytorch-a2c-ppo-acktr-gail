@@ -6,7 +6,7 @@ import torch
 def get_args():
     parser = argparse.ArgumentParser(description='RL')
     parser.add_argument(
-        '--algo', default='a2c', help='algorithm to use: a2c | ppo | acktr')
+        '--algo', default='ppo', help='algorithm to use: a2c | ppo | acktr')
     parser.add_argument(
         '--gail',
         action='store_true',
@@ -75,7 +75,7 @@ def get_args():
     parser.add_argument(
         '--num-processes',
         type=int,
-        default=16,
+        default=1,
         help='how many training CPU processes to use (default: 16)')
     parser.add_argument(
         '--num-steps',
@@ -115,19 +115,19 @@ def get_args():
     parser.add_argument(
         '--num-env-steps',
         type=int,
-        default=10e6,
+        default=1e6,
         help='number of environment steps to train (default: 10e6)')
     parser.add_argument(
         '--env-name',
-        default='PongNoFrameskip-v4',
+        default='dm.humanoid.stand',
         help='environment to train on (default: PongNoFrameskip-v4)')
     parser.add_argument(
         '--log-dir',
-        default='/tmp/gym/',
+        default='/home/mandi/pytorch-a2c-ppo-acktr-gail/data/',
         help='directory to save agent logs (default: /tmp/gym)')
     parser.add_argument(
         '--save-dir',
-        default='./trained_models/',
+        default='/home/mandi/pytorch-a2c-ppo-acktr-gail/data/',
         help='directory to save agent logs (default: ./trained_models/)')
     parser.add_argument(
         '--no-cuda',
